@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ADB-OTG.iml" filepath="$PROJECT_DIR$/.idea/modules/ADB-OTG.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/adblib/ADB-OTG.adblib.iml" filepath="$PROJECT_DIR$/.idea/modules/adblib/ADB-OTG.adblib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/ADB-OTG.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/ADB-OTG.app.iml" />
+    </modules>
+  </component>
+</project>
