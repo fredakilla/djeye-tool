@@ -252,7 +252,7 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId()==R.id.go_to_github){
-            startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse("https://github.com/KhunHtetzNaing/ADB-OTG")));
+            startActivity(new Intent(Intent.ACTION_VIEW).setData(Uri.parse("https://github.com/fredakilla/djeye-tool")));
         }
         return super.onOptionsItemSelected(item);
     }
