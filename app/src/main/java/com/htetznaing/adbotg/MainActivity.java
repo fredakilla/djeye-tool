@@ -80,7 +80,9 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
     private AdbStream stream;
     private SpinnerDialog waitingDialog;
 
+    // action butttons
     private Button btn_findMyDrone;
+    private Button btn_removeForceUpgradePrompt;
     private Button btn_exit;
 
     @Override
@@ -99,6 +101,7 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
         mManager = (UsbManager) getSystemService(Context.USB_SERVICE);
 
         btn_findMyDrone = findViewById(R.id.btn_findMyDrone);
+        btn_removeForceUpgradePrompt = findViewById(R.id.btn_removeForceUpgradePrompt);
         btn_exit = findViewById(R.id.btn_exit);
 
         handler = new Handler() {
@@ -564,6 +567,14 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
             }
         });
 
+        // button - remove force upgrade prompt
+        btn_removeForceUpgradePrompt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                removeForceUpgradePrompt_command();
+            }
+        });
+
         // button - exit
         btn_exit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -572,6 +583,37 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
                 finish();
             }
         });
+    }
+
+    private String runShellCommand(String singleCommand)  {
+        logs.append("\n" + singleCommand + "\n");
+        String result = "";
+        try {
+            AdbStream stream = adbConnection.open(singleCommand);
+            while (!stream.isClosed()) {
+                try {
+                    result = new String(stream.read(), "US-ASCII");
+                    System.out.println("reading stream...");
+                    System.out.println(result);
+                    logs.append(result);
+                } finally {
+                    // there must be a Stream Close Exception
+                    break;
+                }
+            }
+            System.out.println("stream closed.");
+        }
+        catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return result;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return result;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return result;
+        }
+        return result;
     }
 
     private void findMyDjiFpvDrone_command() {
@@ -674,6 +716,18 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
 
         return false;
     }
+
+
+    // option to remove force upgrade prompt on goggles after using dji fly app
+    private void removeForceUpgradePrompt_command()  {
+        logs.setText("# Remove force upgrade prompt\n");
+        runShellCommand("shell: rm /cache/force_upgrade");
+        runShellCommand("shell: setprop dji.prop.enforce_upgrade 0");
+        runShellCommand("shell: reboot");
+    }
+
+
+
 
 }
 

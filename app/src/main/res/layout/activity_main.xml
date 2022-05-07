@@ -104,7 +104,7 @@
         <RelativeLayout
             android:id="@+id/runContainer"
             android:layout_width="match_parent"
-            android:layout_height="105dp"
+            android:layout_height="159dp"
             android:layout_alignParentBottom="true">
 
             <LinearLayout
@@ -117,6 +117,12 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Find my DJI FPV Drone" />
+
+                <Button
+                    android:id="@+id/btn_removeForceUpgradePrompt"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Remove Force Upgrade Prompt" />
 
                 <Button
                     android:id="@+id/btn_exit"
