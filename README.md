@@ -12,3 +12,6 @@ You can use it by installing the app without rooting your phone however your DJI
 
 - ⚡ "Find my dji fpv drone"
 Find the last known gps coordinates of your DJI FPV drone and launch google maps to view the position. Useful if you lost your drone.
+
+- ⚡ "Remove force upgrade prompt"
+Remove force upgrade prompt on gogles after using dji fly app
