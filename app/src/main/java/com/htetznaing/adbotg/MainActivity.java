@@ -539,7 +539,8 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
     // djeye-tools new stuff from here
     // ---------------------------------------------------
 
-    private AlertDialog dialog;
+    private String commandResult = "";      // result of command shell
+    private AlertDialog dialog;             // alert dialog
 
     void show(String title, String message)
     {
@@ -585,17 +586,24 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
         });
     }
 
-    private String runShellCommand(String singleCommand)  {
+    /*private String runShellCommand(String singleCommand)  {
         logs.append("\n" + singleCommand + "\n");
         String result = "";
         try {
             AdbStream stream = adbConnection.open(singleCommand);
             while (!stream.isClosed()) {
                 try {
-                    result = new String(stream.read(), "US-ASCII");
+
+                    result += new String(stream.read(), "US-ASCII");
                     System.out.println("reading stream...");
                     System.out.println(result);
                     logs.append(result);
+
+                    final String[] output = {new String(stream.read(), "US-ASCII")};
+                    System.out.println(output[0]);
+                    logs.append(output[0]);
+
+
                 } finally {
                     // there must be a Stream Close Exception
                     break;
@@ -614,11 +622,20 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
             return result;
         }
         return result;
+    }*/
+
+
+    // Wrapping interface
+    private interface FunctionPointer {
+        // Method signatures of pointed method
+        void methodSignature(String commandResult);
     }
 
-    private void findMyDjiFpvDrone_command() {
-        String command = "shell: cat /blackbox/last_drone_info";
+    private void runShellCommand(String command, FunctionPointer func) {
         logs.setText("# " + command + "\n");
+
+        // clear result string
+        commandResult = "";
 
         // Open the shell stream of ADB
         try {
@@ -634,14 +651,17 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
             return;
         }
 
-        // Start the receiving thread
-        new Thread(new Runnable() {
+       new Thread(new Runnable() {
             @Override
             public void run() {
                 while (!stream.isClosed()) {
                     try {
                         // Print each thing we read from the shell stream
                         final String[] output = {new String(stream.read(), "US-ASCII")};
+
+                        // append thing we read to the result command string
+                        commandResult += output[0];
+
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -651,15 +671,10 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
                                     System.out.println("End => " + user);
                                 }
 
+                                // append string to logs text view
                                 logs.append(output[0]);
 
-                                // get result
-                                try {
-                                    if(findMyDjiFpvDrone(logs.getText().toString()))
-                                        stream.close();
-                                } catch (IOException e) {
-                                }
-
+                                // scroll view
                                 scrollView.post(new Runnable() {
                                     @Override
                                     public void run() {
@@ -668,6 +683,7 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
                                 });
                             }
                         });
+
                     } catch (UnsupportedEncodingException e) {
                         e.printStackTrace();
                         return;
@@ -676,16 +692,44 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
                         return;
                     } catch (IOException e) {
                         e.printStackTrace();
-                        return;
+                        // the stream may be closed
                     }
                 }
+
+                // stream was closed,
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        // call the FunctionPointer method
+                        System.out.println("commandResult");
+                        func.methodSignature(commandResult);
+                    }
+                });
+
             }
         }).start();
     }
 
-    private boolean findMyDjiFpvDrone(String result) {
+    //------------------------------------------------------------------------------------
+    // Find My DJI FPV drone
+    // - get last gps location in /blackbox/last_drone_info file
+    // - open google maps and locate
+    //------------------------------------------------------------------------------------
+
+    private void findMyDjiFpvDrone_command() {
+        logs.setText("# Find my DJI FPV drone\n");
+        runShellCommand("shell: cat /blackbox/last_drone_info", this::findMyDjiFpvDrone);
+    }
+
+    private void findMyDjiFpvDrone(String result) {
         double latitude = 0;
         double longitude = 0;
+
+        // check if command result contains the gps info
+        if (!result.contains("lantitude") || !result.contains("longitude")) {
+            logs.append("findMyDjiFpvDrone : Unable to get last gps drone information");
+            return;
+        }
 
         // get last gps coord in result
         String[] lines = result.split("\\r?\\n");
@@ -710,24 +754,29 @@ public class MainActivity extends AppCompatActivity implements TextView.OnEditor
             Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
             mapIntent.setPackage("com.google.android.apps.maps");
             startActivity(mapIntent);
-
-            return true;
+        }
+        else {
+            // longitude or latitude == 0
+            logs.append("\nWarning : last latitude or longitude is null, unable to find the drone");
         }
 
-        return false;
     }
 
+    //------------------------------------------------------------------------------------
+    // Remove Force Upgrade Prompt
+    // - remove force upgrade prompt on goggles after using dji fly app
+    //------------------------------------------------------------------------------------
+
+    private void doNothing(String result) {
+        // nothing special here
+    }
 
     // option to remove force upgrade prompt on goggles after using dji fly app
     private void removeForceUpgradePrompt_command()  {
         logs.setText("# Remove force upgrade prompt\n");
-        runShellCommand("shell: rm /cache/force_upgrade");
-        runShellCommand("shell: setprop dji.prop.enforce_upgrade 0");
-        runShellCommand("shell: reboot");
+        runShellCommand("shell: rm /cache/force_upgrade", this::doNothing);
+        runShellCommand("shell: setprop dji.prop.enforce_upgrade 0", this::doNothing);
+        runShellCommand("shell: reboot", (String) -> { logs.append("Reboot..."); });
     }
-
-
-
-
 }
 
